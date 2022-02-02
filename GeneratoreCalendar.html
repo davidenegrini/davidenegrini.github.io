@@ -1,0 +1,189 @@
+<!doctype html>
+<html>
+    <head>
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <link rel="stylesheet" href="https://unpkg.com/purecss@2.0.3/build/pure-min.css">
+        <style>
+            .button-success {
+                background: rgb(255, 255, 0);
+            }
+            .smol {
+                font-size: 75%;
+            }
+            .nascosto, .nascostosempre, #lnkdownload {
+                display: none;
+            }
+        </style>
+    </head>
+    <body>
+        <h1 class="nascondere">Generatore file .ics turni</h1>
+        <p class="nascondere"><i>DN_20220202</i></p>
+        <h2>Mese</h2>
+        <form class="pure-form">
+            <datalist id="mesi">
+                <option value="01">
+                <option value="02">
+                <option value="03">
+                <option value="04">
+                <option value="05">
+                <option value="06">
+                <option value="07">
+                <option value="08">
+                <option value="09">
+                <option value="10">
+                <option value="11">
+                <option value="12">
+            </datalist>
+            Mese: <input list="mesi" name="mese" id="mese" onfocusout="displayfile()">
+            -
+            Anno: <input name="anno" id="anno" value="2022" onfocusout="displayfile()">
+        </form>
+        <h2 class="nascosto nascosto2">Giorni</h2>
+        <div class="nascosto nascosto2">
+            <table class="pure-table">
+                <thead>
+                    <tr>
+                        <th>Giorno</th>
+                        <td>Urg BR festivo</td>
+                        <td>Urg BR mattina</td>
+                        <td>Urg BR pomeriggio</td>
+                        <td>Urg BT mattina</td>
+                        <td>Urg BT pomeriggio</td>
+                        <td>Notte BT</td>
+                        <td>Reperibilità BR</td>
+                        <td>Ambulatorio TAO</td>
+                        <td>Chimica clinica</td>
+                    </tr>
+                </thead>
+                <tbody id="tabella">
+                </tbody>
+            </table>
+        </div>
+        <h2 class="nascosto">Esporta file</h2>
+<pre id="output" class="nascostosempre"></pre>
+<div>
+    <a href="#" class="nascosto nascosto2 pure-button pure-button-primary" onclick="generafile()">Genera</a>
+    <a href="#" id="lnkdownload" class="pure-button pure-button-primary" download="download.ics">Scarica file ics</a>
+</div>
+        <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+        <script>
+            Number.prototype.pad = function(size) {
+                var s = String(this);
+                while (s.length < (size || 2)) {s = "0" + s;}
+                return s;
+            }
+            function getRandomInt(min, max) {
+                min = Math.ceil(min);
+                max = Math.floor(max);
+                return Math.floor(Math.random() * (max - min)) + min; //Il max è escluso e il min è incluso
+            }
+            function displayfile() {
+                var temp1 = $("#mese").val();
+                var temp2 = $("#anno").val();
+                $("#lnkdownload").attr("download", (temp2+"-"+temp1+".ics"))
+                $(".nascosto").show();
+                $(".nascondere").hide();
+                //generazione tabella
+                var temp3="";
+                for (let i = 1; i <= 31; i++) {
+                    temp3=temp3 + "<tr>";
+                    temp3=temp3 + "<th>" + i.pad(2) + "</th>";
+                    temp3=temp3 + '<td><a class="pure-button smol" href="#" onclick="aggiungi(' + i + ', 0, this); return false;">MR 8-13</a></td>';
+                    temp3=temp3 + '<td><a class="pure-button smol" href="#" onclick="aggiungi(' + i + ', 1, this); return false;">BR 8-14</a></td>';
+                    temp3=temp3 + '<td><a class="pure-button smol" href="#" onclick="aggiungi(' + i + ', 2, this); return false;">BR 14-20</a></td>';
+                    temp3=temp3 + '<td><a class="pure-button smol" href="#" onclick="aggiungi(' + i + ', 3, this); return false;">mt 8-14</a></td>';
+                    temp3=temp3 + '<td><a class="pure-button smol" href="#" onclick="aggiungi(' + i + ', 4, this); return false;">pt 14-20</a></td>';
+                    temp3=temp3 + '<td><a class="pure-button smol" href="#" onclick="aggiungi(' + i + ', 5, this); return false;">N 20-8</a></td>';
+                    temp3=temp3 + '<td><a class="pure-button smol" href="#" onclick="aggiungi(' + i + ', 6, this); return false;">Rep 20-8</a></td>';
+                    temp3=temp3 + '<td><a class="pure-button smol" href="#" onclick="aggiungi(' + i + ', 7, this); return false;">TAO 7:30-11</a></td>';
+                    temp3=temp3 + '<td><a class="pure-button smol" href="#" onclick="aggiungi(' + i + ', 9, this); return false;">CC 8-14</a></td>';
+                    temp3=temp3 + "</tr>";
+                }
+                $('#tabella').html(temp3);
+            }
+            function aggiungi(giorno, turno, bottone) {
+                $(bottone).addClass("pure-button-disabled button-success");
+                var dtstart;
+                var dtend;
+                var summary;
+                switch(turno) {
+                    case 0:
+                        dtstart=$("#anno").val() + $("#mese").val() + giorno.pad(2) + "T080000";
+                        dtend=$("#anno").val() + $("#mese").val() + giorno.pad(2) + "T130000";
+                        summary="Urg BR festivo (MR)";
+                        realaggiungi(dtstart, dtend, summary);
+                        dtstart=$("#anno").val() + $("#mese").val() + giorno.pad(2) + "T130000";
+                        dtend=$("#anno").val() + $("#mese").val() + giorno.pad(2) + "T200000";
+                        summary="Reperibilità BR festivo (MR)";
+                        realaggiungi(dtstart, dtend, summary);
+                        break;
+                    case 1:
+                        dtstart=$("#anno").val() + $("#mese").val() + giorno.pad(2) + "T080000";
+                        dtend=$("#anno").val() + $("#mese").val() + giorno.pad(2) + "T140000";
+                        summary="Urg BR mattina";
+                        realaggiungi(dtstart, dtend, summary);
+                        break;
+                    case 2:
+                        dtstart=$("#anno").val() + $("#mese").val() + giorno.pad(2) + "T140000";
+                        dtend=$("#anno").val() + $("#mese").val() + giorno.pad(2) + "T200000";
+                        summary="Urg BR pomeriggio";
+                        realaggiungi(dtstart, dtend, summary);
+                        break;
+                    case 3:
+                        dtstart=$("#anno").val() + $("#mese").val() + giorno.pad(2) + "T080000";
+                        dtend=$("#anno").val() + $("#mese").val() + giorno.pad(2) + "T140000";
+                        summary="Urg BT mattina (mt)";
+                        realaggiungi(dtstart, dtend, summary);
+                        break;
+                    case 4:
+                        dtstart=$("#anno").val() + $("#mese").val() + giorno.pad(2) + "T140000";
+                        dtend=$("#anno").val() + $("#mese").val() + giorno.pad(2) + "T200000";
+                        summary="Urg BT pomeriggio (pt)";
+                        realaggiungi(dtstart, dtend, summary);
+                        break;
+                    case 5:
+                        dtstart=$("#anno").val() + $("#mese").val() + giorno.pad(2) + "T200000";
+                        dtend=$("#anno").val() + $("#mese").val() + (giorno+1).pad(2) + "T080000";
+                        summary="Notte BT (N)";
+                        realaggiungi(dtstart, dtend, summary);
+                        break;
+                    case 6:
+                        dtstart=$("#anno").val() + $("#mese").val() + giorno.pad(2) + "T200000";
+                        dtend=$("#anno").val() + $("#mese").val() + (giorno+1).pad(2) + "T080000";
+                        summary="Reperibilità (R)";
+                        realaggiungi(dtstart, dtend, summary);
+                        break;
+                    case 7:
+                        dtstart=$("#anno").val() + $("#mese").val() + giorno.pad(2) + "T073000";
+                        dtend=$("#anno").val() + $("#mese").val() + giorno.pad(2) + "T110000";
+                        summary="Ambulatorio TAO";
+                        realaggiungi(dtstart, dtend, summary);
+                        break;
+                    case 9:
+                        dtstart=$("#anno").val() + $("#mese").val() + giorno.pad(2) + "T080000";
+                        dtend=$("#anno").val() + $("#mese").val() + giorno.pad(2) + "T140000";
+                        summary="Chimica clinica";
+                        realaggiungi(dtstart, dtend, summary);
+                        break;
+                }
+            }
+            function realaggiungi(dtstart, dtend, summary) {
+                var dtstamp = (new Date()).toISOString().replace(/[^0-9T]/g, "").slice(0,15);
+                var daap = "BEGIN:VEVENT\n";
+                daap = daap + "DTSTART:" + dtstart + "\nDTEND:" + dtend + "\nDTSTAMP:" + dtstamp;
+                daap = daap + "\nUID:" + dtstamp + "uid" + getRandomInt(10,99) + "@spiritoftheforest.org\nSTATUS:CONFIRMED\nSUMMARY:" + summary + "\nTRANSP:OPAQUE\nEND:VEVENT\n";
+                $('#output').append(daap);
+            }
+            function generafile() {
+                $('#output').prepend("BEGIN:VCALENDAR\nVERSION:2.0\nPRODID:-//DVN//GeneratoreFileICS//IT\nCALSCALE:GREGORIAN\nBEGIN:VTIMEZONE\nTZID:Europe/Rome\nX-LIC-LOCATION:Europe/Rome\nEND:VTIMEZONE\n");
+                $('#output').append("END:VCALENDAR\n");
+                var myblob = new Blob([$('#output').text()], {type: "text/calendar"});
+                var myurl = URL.createObjectURL(myblob);
+                $("#lnkdownload").attr("href", myurl);
+                $(".nascosto2").hide();
+                $("#lnkdownload").show();
+            }
+        </script>
+    </body>
+</html>
